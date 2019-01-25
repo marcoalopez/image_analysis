@@ -298,9 +298,8 @@ def get_path():
         root = tk.Tk()
         root.withdraw()
         root.attributes("-topmost", True)
-        file_path = filedialog.askopenfilename(initialdir=os.getcwd(),
-                                               title="Select folder")
+        file_path = filedialog.askdirectory()
     except ImportError:
         print('The script requires Python 3.5 or higher')
 
-    return file_path
+    return file_path + '/'
