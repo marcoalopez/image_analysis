@@ -28,8 +28,8 @@
 #        Python version 3.5 or higher                                          #
 #        Numpy version 1.11 or higher                                          #
 #        Matplotlib version 2.0 or higher                                      #
-#        Scipy version X.x or higher                                           #
-#        dcraw TODO
+#        Pillow version                                                        #
+#        dcraw installed in the system (for the raw2tiff function)             #
 #                                                                              #
 # ============================================================================ #
 
@@ -40,12 +40,11 @@ import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-import imageio
 
 
 def raw2tiff(path='auto',
              dcraw_arg='C:/Users/Marco/Documents/dcraw/dcraw64.exe -v -w -H 0 -o 0 -h -T',
-             img_format='.NEF'):
+             raw_format='.NEF'):
     """ Automate the conversion from RAW to other image format using the
     script dcraw by Dave Coffin's.
 
@@ -58,11 +57,11 @@ def raw2tiff(path='auto',
 
     dcraw_arg : string
         the file path where the dcraw executable is and the dcraw
-        arguments. ToFor details on the dcraw arguments use dcraw
+        arguments. For details on the dcraw arguments call dcraw
         in the console or go to:
         https://www.cybercom.net/~dcoffin/dcraw/dcraw.1.html
 
-    img_format : string
+    raw_format : string
         the format of the raw images. Default: '.NEF'
 
     Returns
@@ -78,7 +77,7 @@ def raw2tiff(path='auto',
         path = get_path()
 
     for filename in os.listdir(path):
-        if filename.endswith(img_format):
+        if filename.endswith(raw_format):
             # print(dcraw_arg + ' ' + path + filename)  # just for testing
             subprocess.run(dcraw_arg + ' ' + path + filename, shell=False)
 
@@ -87,22 +86,28 @@ def raw2tiff(path='auto',
 
 def RGB2gray(input_path='auto',
              output_path='auto',
-             img_format='.tiff'):
+             input_format='.tiff',
+             output_format='.tif'):
     """ Automatically convert RGB images to 8-bit grayscale images
     cointained in a specific folder.
 
     Parameters
     ----------
     input_path : string
-        the file path where the images to be converted are
+        the file path where the images to be converted are stored.
+        If 'auto', the default, the function will ask you for the
+        folder location through a file selection dialog.
 
     output_path : string
         the file path where the grayscale images will be saved.
-        If you use the same file path defined in the input_path,
-        the RGB images will be replaced.
+        If 'auto', the default, the function will ask you for the
+        folder location through a file selection dialog.
 
-    img_format : string
-        the format of the images. Default: '.tiff'
+    input_format : string
+        the format of the input images. Default: '.tiff'
+
+    output_format : string
+        the format of the input images. Default: '.tif'
 
     Returns
     -------
@@ -116,12 +121,13 @@ def RGB2gray(input_path='auto',
         output_path = get_path()
 
     for filename in os.listdir(input_path):
-        if filename.endswith('.tiff'):
-            img = np.array(Image.open(input_path + filename).convert('L'))
-            imageio.imwrite(output_path + filename, im=img)
+        if filename.endswith(input_format):
+            img = Image.open(input_path + filename).convert('L')
+            fn, ext = os.path.splittext(filename)  # remove the file ext
+            img.save(output_path + fn + output_format)
 
     print(' ')
-    print('Done! (ignore warnings if they appear)')
+    print('Done!')
 
     return None
 
@@ -132,6 +138,8 @@ def denoising_img_avg(save_as='denoise_img.tif',
                       robust=True,
                       noise_floor=False):
     """ Noise reduction by image averaging. Images should be aligned.
+    By noise we refer to stochastic variations produced in CCD or CMOS
+    sensors due to a number of factors.
 
     Parameters
     ----------
@@ -212,11 +220,12 @@ def denoising_img_avg(save_as='denoise_img.tif',
 
     # plot the image using matplotlib
     fig, ax = plt.subplots()
-    ax.imshow(denoise_img, cmap='gray')
+    ax.imshow(denoise_img, cmap='bone')
     fig.tight_layout()
 
     # save the denoised image in the same path
-    imageio.imwrite(uri=path + save_as, im=denoise_img)
+    img = Image.fromarray(denoise_img)
+    img.save(path + save_as)
 
     if noise_floor is True:
         return denoise_img, px_std_vals
@@ -283,14 +292,21 @@ def img_autocorrelation(image, plot=True):
 
     # Note: The autocorrelation function is the inverse Fourier Transform of the power spectrum
 
+    # plot the 2D power spectrum (if apply)
     if plot is True:
-        auto_corr_plot(autocorrelation, profile)  # TODO
+        spectrum_plot(autocorrelation, profile)  # TODO
+
+    pass
+
+
+def spectrum_plot():
 
     pass
 
 
 def get_path():
-    """ Get a folder path through a file selection dialog."""
+    """ Get the folder path through a file selection dialog.
+    It uses tkinter"""
 
     try:
         import tkinter as tk
