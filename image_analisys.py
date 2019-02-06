@@ -43,7 +43,7 @@ from PIL import Image
 
 
 def raw2tiff(path='auto',
-             dcraw_arg='C:/Users/Marco/Documents/dcraw/dcraw64.exe -v -w -H 0 -o 0 -h -T',
+             dcraw_arg='C:/Users/Marco/Documents/dcraw/dcraw64.exe -v -w -H 0 -o 0 -q 3 -T',
              raw_format='.NEF'):
     """ Automate the conversion from RAW to other image format using the
     script dcraw by Dave Coffin's.
@@ -78,8 +78,10 @@ def raw2tiff(path='auto',
 
     for filename in os.listdir(path):
         if filename.endswith(raw_format):
-            # print(dcraw_arg + ' ' + path + filename)  # just for testing
             subprocess.run(dcraw_arg + ' ' + path + filename, shell=False)
+
+    print(' ')
+    print('Done!')
 
     return None
 
@@ -123,7 +125,7 @@ def RGB2gray(input_path='auto',
     for filename in os.listdir(input_path):
         if filename.endswith(input_format):
             img = Image.open(input_path + filename).convert('L')
-            fn, ext = os.path.splittext(filename)  # remove the file ext
+            fn, ext = os.path.splitext(filename)  # separate name and ext
             img.save(output_path + fn + output_format)
 
     print(' ')
@@ -134,12 +136,12 @@ def RGB2gray(input_path='auto',
 
 def denoising_img_avg(save_as='denoise_img.tif',
                       path='auto',
-                      file_type='.tiff',
+                      file_type='.tif',
                       robust=True,
                       noise_floor=False):
     """ Noise reduction by image averaging. Images should be aligned.
-    By noise we refer to stochastic variations produced in CCD or CMOS
-    sensors due to a number of factors.
+    By noise we refer here to stochastic variations produced in CCD or
+    CMOS sensors.
 
     Parameters
     ----------
@@ -171,9 +173,9 @@ def denoising_img_avg(save_as='denoise_img.tif',
     --------
     >>> denoising_img_avg(path='C:/Users/name/Documents/my_images/')
     >>> denoising_img_avg(save_as='new_image.tif', path='C:/Users/name/Documents/my_images/')
-    >>> denoise_img, std_px_vals = denoising_img_avg(path='C:/Users/name/Documents/my_images/', noise_floor=True)
 
-    >>> # visualize the error (std) per pixel
+    # For estimate and visualize the noise floor of the image do
+    >>> denoise_img, std_px_vals = denoising_img_avg(noise_floor=True)
     >>> fig, ax = plt.subplots()
     >>> im = ax.imshow(std_px_vals, cmap='plasma')
     >>> fig.colorbar(im, ax=ax)
@@ -208,6 +210,7 @@ def denoising_img_avg(save_as='denoise_img.tif',
 
     # Estimate the noise floor if proceed
     if noise_floor is True:
+        # TODO: ask whether the the noise floor is for a ROI
         print(' ')
         print('Estimating the noise floor...')
         px_std_vals = np.std(img_stack, axis=2)
