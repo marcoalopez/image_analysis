@@ -78,6 +78,7 @@ def raw2tiff(path='auto',
 
     for filename in os.listdir(path):
         if filename.endswith(raw_format):
+            print('converting {}' .format(filename))
             subprocess.run(dcraw_arg + ' ' + path + filename, shell=False)
 
     print(' ')
@@ -124,6 +125,7 @@ def RGB2gray(input_path='auto',
 
     for filename in os.listdir(input_path):
         if filename.endswith(input_format):
+            print('converting {} and saving' .format(filename))
             img = Image.open(input_path + filename).convert('L')
             fn, ext = os.path.splitext(filename)  # separate name and ext
             img.save(output_path + fn + output_format)
@@ -177,14 +179,14 @@ def denoising_img_avg(save_as='denoise_img.tif',
     # For estimate and visualize the noise floor of the image do
     >>> denoise_img, std_px_vals = denoising_img_avg(noise_floor=True)
     >>> fig, ax = plt.subplots()
-    >>> im = ax.imshow(std_px_vals, cmap='plasma')
+    >>> im = ax.imshow(std_px_vals, cmap='cividis')
     >>> fig.colorbar(im, ax=ax)
     """
 
     if path == 'auto':
         path = get_path()
 
-    # open and stack all the images
+    # open and stack all images
     print(' ')
     print('Stacking images...')
     count = 0
@@ -211,6 +213,11 @@ def denoising_img_avg(save_as='denoise_img.tif',
     # Estimate the noise floor if proceed
     if noise_floor is True:
         # TODO: ask whether the the noise floor is for a ROI
+        crop = input("Do you want to define a region of interest (ROI) to estimate the noise floor? (type 'y' or 'n'): ")
+        if crop == 'y':
+            x, y, xp, yp = input("Define the coordinates (x, y, x', y') (e.g. (1014, 192, 4692, 4644): ")
+            px_std_vals = np.std(img_stack[x - 1:y, xp - 1:yp, :], axis=2)
+
         print(' ')
         print('Estimating the noise floor...')
         px_std_vals = np.std(img_stack, axis=2)
@@ -223,7 +230,8 @@ def denoising_img_avg(save_as='denoise_img.tif',
 
     # plot the image using matplotlib
     fig, ax = plt.subplots()
-    ax.imshow(denoise_img, cmap='bone')
+    im = ax.imshow(denoise_img, cmap='bone')
+    fig.colorbar(im, ax=ax)
     fig.tight_layout()
 
     # save the denoised image in the same path
@@ -305,6 +313,44 @@ def img_autocorrelation(image, plot=True):
 def spectrum_plot():
 
     pass
+
+
+def make_video(path='auto',
+               ffmpeg_path='C:/Users/Marco/Documents/ffmpeg/bin/',
+               ffmpeg_arg='ffmpeg -r 1 -f image2 -s 1280x720 -i DSC_%04d.tif -vcodec libx264 -crf 25 movie.mp4'):
+    """ Make a video from a sequence of images using the the ffmpeg converter
+
+    Parameters
+    ----------
+    path : string
+        the path whre the sequence of images are
+
+    ffmpeg_path : string
+        the path where the ffmpeg executable are
+
+    ffmpeg_arg : string
+        the ffmpeg arguments. For example:
+        http://hamelot.io/visualization/using-ffmpeg-to-convert-a-set-of-images-into-a-video/
+
+    Returns
+    -------
+    None
+
+    Requirements
+    ------------
+    ffmpeg installed in the system
+    """
+
+    if path == 'auto':
+        path = get_path()
+
+    os.chdir(path)
+    subprocess.run(ffmpeg_path + ffmpeg_arg, shell=False)
+
+    print(' ')
+    print('Done!')
+
+    return None
 
 
 def get_path():
