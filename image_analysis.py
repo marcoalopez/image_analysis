@@ -43,7 +43,8 @@ from PIL import Image
 
 
 def raw2tiff(path='auto',
-             dcraw_arg='C:/Users/Marco/Documents/dcraw/dcraw64.exe -v -w -H 0 -o 0 -q 3 -T',
+             dcraw_path='C:/Users/Marco/Documents/dcraw/dcraw64.exe',
+             dcraw_arg='-v -w -H 0 -o 0 -q 3 -T',
              raw_format='.NEF'):
     """ Automate the conversion from RAW to other image format using the
     script dcraw by Dave Coffin's.
@@ -54,6 +55,11 @@ def raw2tiff(path='auto',
         the file path where the images to be converted are. If 'auto',
         the default, the function will ask you for the folder location
         through a file selection dialog.
+
+    dcraw_path : string
+        the file path where the dcraw file is located. If 'auto',
+        the default, the function will ask you for the dcraw file
+        location through a file selection dialog.
 
     dcraw_arg : string
         the file path where the dcraw executable is and the dcraw
@@ -76,10 +82,13 @@ def raw2tiff(path='auto',
     if path == 'auto':
         path = get_path()
 
+    if dcraw_path == 'auto':
+        pass
+
     for filename in os.listdir(path):
         if filename.endswith(raw_format):
             print('converting {}' .format(filename))
-            subprocess.run(dcraw_arg + ' ' + path + filename, shell=False)
+            subprocess.run(dcraw_path + ' ' + dcraw_arg + ' ' + path + filename, shell=False)
 
     print(' ')
     print('Done!')
@@ -242,6 +251,33 @@ def denoising_img_avg(save_as='denoise_img.tif',
         return denoise_img, px_std_vals
     else:
         return denoise_img
+
+
+def img_translation(ref_image, image):
+    """ It uses registrer translation from scikit-image to estimate
+    and correct the...TODO
+    """
+    # import nedded skimage libraries
+    try:
+        from skimage import io
+        from skimage.feature import register_translation
+        from scipy.ndimage import fourier_shift
+    except ImportError:
+        print('This function requires skimage!')
+
+
+    # estimate shift
+    shift, error, diffphase = register_translation(img_ref, img)
+
+    print('Image shift is (x, y): ', shift)
+    print('Error =', error)
+
+    if correct is True:
+        offset_image = fourier_shift(np.fft.fftn(img_ref), shift)
+        corrected_image = np.fft.ifftn(offset_image)
+        io.imsave()  # TODO
+    
+    return shift, error, diffphase
 
 
 def img_autocorrelation(image, plot=True):
