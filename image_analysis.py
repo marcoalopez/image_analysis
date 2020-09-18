@@ -62,9 +62,8 @@ def raw2tiff(path='auto',
         location through a file selection dialog.
 
     dcraw_arg : string
-        the file path where the dcraw executable is and the dcraw
-        arguments. For details on the dcraw arguments call dcraw
-        in the console or go to:
+        dcraw arguments. For details on this call dcraw in the
+        console or go to:
         https://www.cybercom.net/~dcoffin/dcraw/dcraw.1.html
 
     raw_format : string
@@ -76,7 +75,7 @@ def raw2tiff(path='auto',
 
     Requirements
     ------------
-    dcraw installed in the system
+    dcraw binary in the system
     """
 
     if path == 'auto':
@@ -151,8 +150,8 @@ def denoising_img_avg(save_as='denoise_img.tif',
                       robust=True,
                       noise_floor=False):
     """ Noise reduction by image averaging. Images should be aligned.
-    By noise we refer here to stochastic variations produced in CCD or
-    CMOS sensors.
+    By noise we refer here to random fluctuations in brighness produced
+    by the CCD and CMOS sensors.
 
     Parameters
     ----------
@@ -253,7 +252,7 @@ def denoising_img_avg(save_as='denoise_img.tif',
         return denoise_img
 
 
-def img_translation(ref_image, image):
+def img_translation(ref_image, image, correct=False):
     """ It uses registrer translation from scikit-image to estimate
     and correct the...TODO
     """
@@ -263,20 +262,19 @@ def img_translation(ref_image, image):
         from skimage.feature import register_translation
         from scipy.ndimage import fourier_shift
     except ImportError:
-        print('This function requires skimage!')
-
+        print('This function requires scikit-image installed in the system!')
 
     # estimate shift
-    shift, error, diffphase = register_translation(img_ref, img)
+    shift, error, diffphase = register_translation(ref_image, image)
 
     print('Image shift is (x, y): ', shift)
     print('Error =', error)
 
     if correct is True:
-        offset_image = fourier_shift(np.fft.fftn(img_ref), shift)
+        offset_image = fourier_shift(np.fft.fftn(ref_image), shift)
         corrected_image = np.fft.ifftn(offset_image)
         io.imsave()  # TODO
-    
+
     return shift, error, diffphase
 
 
