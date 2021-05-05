@@ -43,7 +43,7 @@ from PIL import Image
 
 
 def raw2tiff(path='auto',
-             dcraw_path='C:/Users/Marco/Documents/dcraw/dcraw64.exe',
+             dcraw_path='C:/Users/marco/Documents/dcraw/dcraw64.exe',
              dcraw_arg='-v -w -H 0 -o 0 -q 3 -T',
              raw_format='.NEF'):
     """ Automate the conversion from RAW to other image format using the
@@ -216,7 +216,7 @@ def denoising_img_avg(save_as='denoise_img.tif',
         denoise_img = np.mean(img_stack, axis=2)
 
     # convert from float to integer
-    denoise_img = np.uint8(denoise_img)
+    denoise_img = np.rint(denoise_img)
 
     # Estimate the noise floor if proceed
     if noise_floor is True:
